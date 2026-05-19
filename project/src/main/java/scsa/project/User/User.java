@@ -3,6 +3,8 @@ package scsa.project.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import scsa.project.PlayState.PlayState;
 
 import java.time.LocalDateTime;
 
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@EntityListeners(AuditingEntityListener.class)
 public class User {
 
     @Id
@@ -36,6 +39,6 @@ public class User {
     @CreatedDate
     private LocalDateTime createdAt;
 
-//    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
-//    private PlayState playState;
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private PlayState playState;
 }
