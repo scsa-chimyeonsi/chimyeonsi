@@ -3,8 +3,8 @@ spring:
     name: project
 
   datasource:
-    driver-class-name: oracle.jdbc.driver.OracleDriver
-    url: jdbc:oracle:thin:@localhost:1521/xe
+    driver-class-name: oracle.jdbc.OracleDriver
+    url: jdbc:oracle:thin:@M6F:1521:XE
     username: hr
     password: hr
 
@@ -12,3 +12,6 @@ spring:
     generate-ddl: true
     database: oracle
     show-sql: true
+
+server:
+  port: 8081
