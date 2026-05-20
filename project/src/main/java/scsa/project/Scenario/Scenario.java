@@ -2,12 +2,7 @@ package scsa.project.Scenario;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import scsa.project.PlayLog.PlayLog;
-
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,11 +37,21 @@ public class Scenario {
     @Column(name = "opt_A_score", nullable = false)
     private Integer optAScore;
 
+    @Column(name = "next_A_id")
+    private Long nextAId;
+
     @Column(name = "opt_B_text", nullable = false)
     private String optBText;
 
     @Column(name = "opt_B_score", nullable = false)
     private Integer optBScore;
+
+    @Column(name = "next_B_id")
+    private Long nextBId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ScenarioType type;
 
     @OneToMany(mappedBy = "scenario", fetch = FetchType.LAZY)
     @Builder.Default
