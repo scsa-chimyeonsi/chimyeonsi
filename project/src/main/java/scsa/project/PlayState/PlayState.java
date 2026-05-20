@@ -53,4 +53,13 @@ public class PlayState {
     @Builder.Default
     private List<PlayLog> playLogs = new ArrayList<>();
 
+
+    public void addScore(int score) {
+        this.totalScore += score;
+    }
+
+    public void incrementStep() {
+        this.currentStep += 1;
+    }
+
 }
