@@ -8,7 +8,7 @@ import scsa.project.PlayLog.dto.SubmitOptionResponse;
 
 
 @RestController
-@RequestMapping("/api/play-logs")
+@RequestMapping("/play-logs")
 @RequiredArgsConstructor
 public class PlayLogController {
 
