@@ -2,6 +2,8 @@ package scsa.project.PlayLog;
 
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import scsa.project.PlayState.PlayState;
 
@@ -18,4 +20,8 @@ public interface PlayLogRepository extends JpaRepository<PlayLog, Long> {
 
     // 3. 특정 유저의 특정 시나리오 선택 기록이 있는지 확인할 때
     boolean existsByPlayStateAndScenario_ScenarioId(PlayState playState, Long scenarioId);
+
+    // 4. PlayLog와 Scenario를 JOIN FETCH로 한 번에 조회하여 N+1 문제 회피
+    @Query("SELECT pl FROM PlayLog pl JOIN FETCH pl.scenario s WHERE pl.playState.stateId = :stateId ORDER BY s.stepOrder ASC")
+    List<PlayLog> findByPlayStateIdWithScenario(@Param("stateId") Long stateId);
 }

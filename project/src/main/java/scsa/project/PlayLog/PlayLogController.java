@@ -8,7 +8,7 @@ import scsa.project.PlayLog.dto.SubmitOptionResponse;
 
 
 @RestController
-@RequestMapping("/play-logs")
+@RequestMapping("/api/play-logs")
 @RequiredArgsConstructor
 public class PlayLogController {
 
@@ -22,5 +22,13 @@ public class PlayLogController {
         SubmitOptionResponse response = playLogService.submitOption(userId, request);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/states/{stateId}")
+    public ResponseEntity<java.util.List<scsa.project.PlayLog.dto.PlayLogResponse>> getLogsByState(
+            @PathVariable Long stateId) {
+
+        java.util.List<scsa.project.PlayLog.dto.PlayLogResponse> responses = playLogService.getLogsByStateId(stateId);
+        return ResponseEntity.ok(responses);
     }
 }
