@@ -24,4 +24,9 @@ public class PlayStateController {
     public ResponseEntity<PlayStateResponseDto> resetOrCreatePlayState(@PathVariable("user_id") Long userId) {
         return ResponseEntity.ok(playStateService.resetOrCreatePlayState(userId));
     }
+
+    @GetMapping("/users/{user_id}/ending")
+    public ResponseEntity<EndingResponse> getEnding(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(playStateService.getEnding(userId));
+    }
 }
