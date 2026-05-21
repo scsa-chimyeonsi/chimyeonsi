@@ -23,4 +23,12 @@ public class PlayLogController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/states/{stateId}")
+    public ResponseEntity<java.util.List<scsa.project.PlayLog.dto.PlayLogResponse>> getLogsByState(
+            @PathVariable Long stateId) {
+
+        java.util.List<scsa.project.PlayLog.dto.PlayLogResponse> responses = playLogService.getLogsByStateId(stateId);
+        return ResponseEntity.ok(responses);
+    }
 }

@@ -1,14 +1,16 @@
 package scsa.project.PlayState;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import scsa.project.PlayLog.PlayLog;
+import scsa.project.PlayLog.PlayLogRepository;
 import scsa.project.PlayLog.SelectedOption;
-import scsa.project.PlayState.dto.SummaryResponse;
-import scsa.project.Scenario.Scenario;
 import scsa.project.Scenario.ScenarioRepository;
-import scsa.project.Scenario.ScenarioType;
+import scsa.project.User.User;
+import scsa.project.User.UserRepository;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ public class PlayStateService {
 
     private final PlayStateRepository playStateRepository;
     private final ScenarioRepository scenarioRepository;
+    private final UserRepository userRepository;
+    private final PlayLogRepository playLogRepository;
 
     public PlayStateResponseDto getPlayStateByUserId(Long userId) {
         return playStateRepository.findByUser_UserId(userId)
@@ -26,59 +30,39 @@ public class PlayStateService {
                 .orElse(PlayStateResponseDto.notFound());
     }
 
-    public SummaryResponse getSummary(Long userId) {
-        PlayState playState = playStateRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("플레이 상태가 없습니다."));
+    @Transactional
+    public PlayStateResponseDto resetOrCreatePlayState(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
-        PlayLog lastLog = playState.getPlayLogs()
-                .get(playState.getPlayLogs().size() - 1);
+        PlayState state = playStateRepository.findByUser_UserId(userId)
+                .map(existing -> {
+                    existing.getPlayLogs().clear();
+                    existing.setCurrentStep(1);
+                    existing.setTotalScore(0);
+                    return playStateRepository.save(existing);
+                })
+                .orElseGet(() -> playStateRepository.save(
+                        PlayState.builder().user(user).build()
+                ));
 
-        Long nextId = lastLog.getSelectedOpt() == SelectedOption.A
-                ? lastLog.getScenario().getNextAId()
-                : lastLog.getScenario().getNextBId();
+        return PlayStateResponseDto.forReset(state);
+    }
 
-        Scenario endingScenario = scenarioRepository.findById(nextId)
-                .orElseThrow(() -> new IllegalArgumentException("엔딩 시나리오가 없습니다."));
+    public EndingResponse getEnding(Long userId) {
+        PlayState state = playStateRepository.findByUser_UserId(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Play state not found"));
 
-        String endingType;
-        String endingTitle;
-
-        if (endingScenario.getType() == ScenarioType.GAME_OVER) {
-            endingType = "SAD";
-            endingTitle = "배드 엔딩"; //GAME_OVER면 배드앤딩
-        } else {
-            endingType = "HAPPY";
-            endingTitle = "해피 엔딩";
+        long totalScenarios = scenarioRepository.count();
+        if (state.getCurrentStep() <= totalScenarios) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Game is not finished yet");
         }
 
-        List<SummaryResponse.TimelineItem> timeline = playState.getPlayLogs()
-                .stream()
-                .map(log -> {
-                    Scenario s = log.getScenario();
-                    String selectedText = log.getSelectedOpt() == SelectedOption.A
-                            ? s.getOptAText() : s.getOptBText();
-                    int scoreChange = log.getSelectedOpt() == SelectedOption.A
-                            ? s.getOptAScore() : s.getOptBScore();
+        List<PlayLog> logs = playLogRepository.findByPlayState(state);
+        long optACount = logs.stream().filter(l -> l.getSelectedOpt() == SelectedOption.A).count();
+        long optBCount = logs.stream().filter(l -> l.getSelectedOpt() == SelectedOption.B).count();
 
-                    return SummaryResponse.TimelineItem.builder()
-                            .step_order(s.getStepOrder())
-                            .scenario_id(s.getScenarioId())
-                            .content(s.getContent())
-                            .selected_opt(log.getSelectedOpt().name())
-                            .selected_text(selectedText)
-                            .score_change(scoreChange)
-                            .created_at(log.getCreatedAt())
-                            .build();
-                })
-                .toList();
-
-        return SummaryResponse.builder()
-                .state_id(playState.getStateId())
-                .user_id(userId)
-                .ending_type(endingType)
-                .ending_title(endingTitle)
-                .final_score(playState.getTotalScore())
-                .timeline(timeline)
-                .build();
+        EndingType endingType = EndingType.of(state.getTotalScore());
+        return EndingResponse.of(state, endingType, optACount, optBCount);
     }
 }

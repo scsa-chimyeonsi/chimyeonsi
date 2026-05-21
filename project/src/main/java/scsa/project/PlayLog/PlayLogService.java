@@ -12,6 +12,9 @@ import scsa.project.PlayState.PlayStateRepository;
 import scsa.project.Scenario.Scenario;
 import scsa.project.Scenario.ScenarioRepository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import scsa.project.PlayLog.dto.PlayLogResponse;
 
 @Service
 @RequiredArgsConstructor
@@ -100,6 +103,42 @@ public class PlayLogService {
                 message,
                 nextScenarioResponse
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<PlayLogResponse> getLogsByStateId(Long stateId) {
+        PlayState playState = playStateRepository.findById(stateId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 게임 상태가 존재하지 않습니다."));
+
+        // JOIN FETCH로 시나리오를 한 번에 가져와 N+1 문제를 회피
+        List<PlayLog> logs = playLogRepository.findByPlayStateIdWithScenario(stateId);
+
+        return logs.stream()
+                .map(pl -> {
+                    Scenario s = pl.getScenario();
+                    String selectedText = null;
+                    Integer scoreChange = null;
+                    if (pl.getSelectedOpt() == SelectedOption.A) {
+                        selectedText = s.getOptAText();
+                        scoreChange = s.getOptAScore();
+                    } else if (pl.getSelectedOpt() == SelectedOption.B) {
+                        selectedText = s.getOptBText();
+                        scoreChange = s.getOptBScore();
+                    }
+
+                    return new PlayLogResponse(
+                            pl.getLogId(),
+                            playState.getStateId(),
+                            s.getScenarioId(),
+                            s.getStepOrder(),
+                            s.getContent(),
+                            pl.getSelectedOpt().name(),
+                            selectedText,
+                            scoreChange,
+                            pl.getCreatedAt()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 }
 
