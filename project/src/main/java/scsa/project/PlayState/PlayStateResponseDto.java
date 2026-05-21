@@ -30,4 +30,16 @@ public record PlayStateResponseDto(
                 totalSteps
         );
     }
+
+    public static PlayStateResponseDto forReset(PlayState state) {
+        return new PlayStateResponseDto(
+                null,
+                state.getStateId(),
+                state.getUser().getUserId(),
+                state.getCurrentStep(),
+                state.getTotalScore(),
+                state.getUpdatedAt(),
+                null
+        );
+    }
 }

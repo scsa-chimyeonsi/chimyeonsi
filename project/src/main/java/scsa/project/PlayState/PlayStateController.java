@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,5 +18,10 @@ public class PlayStateController {
     @GetMapping("/users/{user_id}")
     public ResponseEntity<PlayStateResponseDto> getPlayState(@PathVariable("user_id") Long userId) {
         return ResponseEntity.ok(playStateService.getPlayStateByUserId(userId));
+    }
+
+    @PostMapping("/users/{user_id}")
+    public ResponseEntity<PlayStateResponseDto> resetOrCreatePlayState(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(playStateService.resetOrCreatePlayState(userId));
     }
 }
