@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import scsa.project.PlayState.dto.SummaryResponse;
 
 @RestController
 @RequestMapping("/play-states")
@@ -28,5 +29,10 @@ public class PlayStateController {
     @GetMapping("/users/{user_id}/ending")
     public ResponseEntity<EndingResponse> getEnding(@PathVariable("user_id") Long userId) {
         return ResponseEntity.ok(playStateService.getEnding(userId));
+    }
+
+    @GetMapping("/users/{user_id}/summary")
+    public ResponseEntity<SummaryResponse> getSummary(@PathVariable("user_id") Long userId) {
+        return ResponseEntity.ok(playStateService.getSummary(userId));
     }
 }

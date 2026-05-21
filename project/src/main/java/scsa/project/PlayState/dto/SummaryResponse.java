@@ -17,6 +17,7 @@ public class SummaryResponse {
     private Long user_id;
     private String ending_type;
     private String ending_title;
+    private String ending_message;
     private Integer final_score;
     private List<TimelineItem> timeline;
 
@@ -32,7 +33,4 @@ public class SummaryResponse {
         private Integer score_change;
         private LocalDateTime created_at;
     }
-
-
-
 }
