@@ -72,7 +72,7 @@ public class PlayLogService {
             // ScenarioType Enum을 String으로 변환하여 확인
             String scenarioTypeStr = nextScenario.getType().name();
 
-            if ("NORMAL".equals(scenarioTypeStr)) {
+            if ("CONTINUE".equals(scenarioTypeStr)) {
                 resultType = "CONTINUE";
             } else {
                 // GAME_OVER 또는 ENDING인 경우

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>침연시 - 게임</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="card card-wide">
+        <!-- 상단 진행 정보 -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <span id="stepBadge" class="badge badge-indigo"></span>
+            <span id="scoreBadge" class="text-muted text-sm"></span>
+        </div>
+        <div class="progress-bar" style="margin-bottom:1.75rem;">
+            <div id="progressFill" class="progress-fill" style="width:0%"></div>
+        </div>
+
+        <!-- 시나리오 내용 -->
+        <div style="background:#0f172a; border-radius:0.75rem; padding:1.5rem; margin-bottom:2rem;
+                    border:1px solid #334155; min-height:140px; line-height:1.8;">
+            <p id="scenarioContent" style="color:#cbd5e1; white-space:pre-wrap;"></p>
+        </div>
+
+        <!-- 선택지 -->
+        <div id="options">
+            <button id="optA" class="option-btn">
+                <span class="opt-label">A</span>
+                <span id="optAText"></span>
+            </button>
+            <button id="optB" class="option-btn">
+                <span class="opt-label">B</span>
+                <span id="optBText"></span>
+            </button>
+        </div>
+
+        <!-- 로딩 / 선택 결과 -->
+        <div id="resultBox" class="alert hidden" style="margin-top:1rem;"></div>
+
+        <hr class="divider">
+        <a href="menu.html" class="link text-sm">← 메뉴로 돌아가기</a>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        if (!Auth.requireLogin()) throw new Error('not logged in');
+
+        const userId = Auth.getUserId();
+        let currentScenarioId = null;
+
+        async function loadScenario() {
+            try {
+                const data = await api.getCurrentScenario(userId);
+                currentScenarioId = data.scenario.scenario_id;
+
+                document.getElementById('stepBadge').textContent =
+                    `${data.current_step} / ${data.total_steps} 단계`;
+                document.getElementById('scoreBadge').textContent = `현재 점수: ${data.total_score}점`;
+
+                const pct = Math.round((data.current_step - 1) / data.total_steps * 100);
+                document.getElementById('progressFill').style.width = pct + '%';
+
+                document.getElementById('scenarioContent').textContent = data.scenario.content;
+                document.getElementById('optAText').textContent = data.scenario.opt_a_text;
+                document.getElementById('optBText').textContent = data.scenario.opt_b_text;
+
+                document.getElementById('options').classList.remove('hidden');
+                document.getElementById('resultBox').classList.add('hidden');
+            } catch (err) {
+                showResult('error', err.message);
+            }
+        }
+
+        async function selectOption(opt) {
+            document.getElementById('options').classList.add('hidden');
+
+            try {
+                const data = await api.submitOption(userId, {
+                    scenarioId: currentScenarioId,
+                    selectedOpt: opt,
+                });
+
+                if (data.resultType === 'CONTINUE') {
+                    showResult('success', `+${data.scoreChange}점 획득! 총점: ${data.totalScore}점`);
+                    setTimeout(loadScenario, 1200);
+                } else {
+                    // ENDING 또는 GAME_OVER
+                    location.href = 'result.html';
+                }
+            } catch (err) {
+                showResult('error', err.message);
+                document.getElementById('options').classList.remove('hidden');
+            }
+        }
+
+        function showResult(type, msg) {
+            const el = document.getElementById('resultBox');
+            el.textContent = msg;
+            el.className   = `alert ${type === 'error' ? 'alert-error' : 'alert-success'}`;
+        }
+
+        document.getElementById('optA').addEventListener('click', () => selectOption('A'));
+        document.getElementById('optB').addEventListener('click', () => selectOption('B'));
+
+        loadScenario();
+    </script>
+</body>
+</html>
