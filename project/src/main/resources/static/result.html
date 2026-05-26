@@ -11,12 +11,12 @@
     <div class="card card-wide">
         <!-- 엔딩 헤더 -->
         <div style="text-align:center; margin-bottom:1.75rem;">
-            <span id="endingBadge" class="badge" style="font-size:0.8125rem; margin-bottom:0.75rem;">
-            </span>
+            <span id="endingBadge" class="badge" style="font-size:0.8125rem; margin-bottom:0.75rem;"></span>
             <h1 id="endingTitle" class="page-title" style="margin-bottom:0.25rem;"></h1>
             <p id="endingMessage" class="page-subtitle" style="margin-bottom:0.25rem;"></p>
-            <p id="scenarioMessage"
-               style="color:#94a3b8; font-size:0.9rem; font-style:italic; margin-top:0.5rem;"></p>
+            <!-- Ending image (place images in /static/images/) -->
+            <img id="endingImage" src="" alt="ending image" style="width:100%; max-height:300px; object-fit:cover; border-radius:0.5rem; margin:0.75rem 0;">
+            <p id="scenarioMessage" style="color:#94a3b8; font-size:0.9rem; font-style:italic; margin-top:0.5rem;"></p>
         </div>
 
         <!-- 점수 요약 -->
@@ -68,12 +68,47 @@
                 ]);
 
                 const isGameOver = ending.ending_type === 'GAME_OVER';
-                const badge = document.getElementById('endingBadge');
-                badge.textContent = isGameOver ? '게임 오버' : '엔딩';
-                badge.classList.add(isGameOver ? 'badge-red' : 'badge-indigo');
+                const isEnding = ending.ending_type === 'ENDING';
 
-                document.getElementById('endingTitle').textContent   = ending.ending_title;
-                document.getElementById('endingMessage').textContent = ending.ending_message;
+                // Special ending detection: check scenario message from server or timeline content
+                const scenarioMsg = ending.scenario_message || '';
+                const timelineIncludesSpecial = (summary.timeline || []).some(i => i.content && i.content.includes('김풍'));
+                const isSpecial = scenarioMsg.includes('김풍') || timelineIncludesSpecial;
+
+                const badge = document.getElementById('endingBadge');
+                if (isSpecial) {
+                    badge.textContent = '스페셜 엔딩';
+                    badge.classList.add('badge-yellow');
+                } else {
+                    badge.textContent = isGameOver ? '게임 오버' : '해피 엔딩';
+                    badge.classList.add(isGameOver ? 'badge-red' : 'badge-indigo');
+                }
+
+                // select image based on ending type
+                let imageSrc = '/images/happy_ending.jpg';
+                if (isSpecial) {
+                    imageSrc = '/images/special_ending.jpg';
+                } else if (isGameOver) {
+                    imageSrc = '/images/bad_ending.jpg';
+                } else if (isEnding) {
+                    imageSrc = '/images/happy_ending.jpg';
+                }
+
+                const imgEl = document.getElementById('endingImage');
+                if (imgEl) {
+                    imgEl.src = imageSrc;
+                    imgEl.alt = isSpecial ? 'Special Ending' : (isGameOver ? 'Bad Ending' : 'Happy Ending');
+                }
+
+                // title/message overrides for special ending
+                if (isSpecial) {
+                    document.getElementById('endingTitle').textContent = '침착맨은 매력적인 김풍을 거부할 수 없었다...';
+                    document.getElementById('endingMessage').textContent = ending.ending_message || '침착맨은 매력적인 김풍을 거부할 수 없었다...';
+                } else {
+                    document.getElementById('endingTitle').textContent   = (ending.ending_title || (isGameOver ? '게임 오버' : '침착맨은 당신에게 반한 듯하다'));
+                    document.getElementById('endingMessage').textContent = ending.ending_message || '';
+                }
+
                 document.getElementById('scenarioMessage').textContent = ending.scenario_message || '';
                 document.getElementById('finalScore').textContent    = ending.final_score + '점';
                 document.getElementById('optACount').textContent     = ending.opt_a_count + '회';
