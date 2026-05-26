@@ -3,42 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>침연시 - 로그인</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>침연시 — 침착맨 연애 시뮬레이션</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: #070d1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+            overflow: hidden; /* 흔들림 시 스크롤바 방지 */
+        }
+
+        .splash {
+            display: flex;
+            width: 100%;
+            max-width: 960px;
+            min-height: 580px;
+            border-radius: 1.25rem;
+            overflow: hidden;
+            box-shadow:
+                0 40px 100px -15px rgba(0, 0, 0, 0.9),
+                0 0 0 1px rgba(255, 255, 255, 0.06);
+            transform-origin: center center;
+        }
+
+        /* ── 드럼 쨍: 전체 카드 흔들림 ── */
+        @keyframes drum-shake {
+            0%   { transform: translate(0,     0);    }
+            8%   { transform: translate(-8px, -4px);  }
+            18%  { transform: translate(7px,   4px);  }
+            30%  { transform: translate(-5px, -3px);  }
+            44%  { transform: translate(4px,   2px);  }
+            58%  { transform: translate(-3px, -1px);  }
+            72%  { transform: translate(2px,   1px);  }
+            86%  { transform: translate(-1px,  0px);  }
+            100% { transform: translate(0,     0);    }
+        }
+
+        /* ── 드럼 쨍: 사진 클로즈업 ── */
+        @keyframes photo-closeup {
+            0%   { transform: scale(1);    filter: brightness(0.82); }
+            12%  { transform: scale(1.09); filter: brightness(1.0);  }
+            100% { transform: scale(1.04); filter: brightness(0.85); }
+        }
+
+        .splash.is-shaking {
+            animation: drum-shake 1.1s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+
+        .splash__image.is-zooming img {
+            animation: photo-closeup 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transition: none !important;
+        }
+
+        /* ── 왼쪽: 캐릭터 사진 ── */
+        .splash__image {
+            position: relative;
+            flex: 1.2;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .splash__image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            filter: brightness(0.82);
+        }
+
+        .splash__image::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to right,
+                rgba(7, 13, 26, 0) 35%,
+                rgba(7, 13, 26, 0.55) 75%,
+                rgba(7, 13, 26, 0.95) 100%
+            );
+            pointer-events: none;
+        }
+
+        .splash__image-badge {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 1.5rem;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            padding: 0.4rem 0.85rem;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: #94a3b8;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* ── 오른쪽: 로그인 패널 ── */
+        .splash__panel {
+            flex: 1;
+            background: #070d1a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem 2.75rem;
+            min-width: 300px;
+        }
+
+        .splash__genre {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: #6366f1;
+            margin-bottom: 0.5rem;
+        }
+
+        .splash__logo {
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 0.4rem;
+        }
+
+        .splash__tagline {
+            font-size: 0.875rem;
+            color: #4b5775;
+            margin-bottom: 2.5rem;
+        }
+
+        .splash__divider {
+            border: none;
+            border-top: 1px solid #131c2e;
+            margin: 1.5rem 0;
+        }
+
+        .splash__footer {
+            text-align: center;
+            font-size: 0.8125rem;
+            color: #3d4e68;
+        }
+
+        .splash__footer a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .splash__footer a:hover {
+            color: #818cf8;
+            text-decoration: underline;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.625rem;
+            width: 100%;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-start:hover  { opacity: 0.92; transform: translateY(-1px); }
+        .btn-start:active { transform: translateY(0); }
+
+        /* ── 뮤트 버튼 ── */
+        #muteBtn {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 2.5rem;
+            height: 2.5rem;
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.15s, transform 0.1s;
+            z-index: 100;
+            color: #fff;
+        }
+
+        #muteBtn:hover { background: rgba(99, 102, 241, 0.4); transform: scale(1.1); }
+
+        /* ── 모바일 ── */
+        @media (max-width: 640px) {
+            body { padding: 0; align-items: flex-start; }
+
+            .splash {
+                flex-direction: column;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .splash__image {
+                flex: none;
+                height: 45vw;
+                min-height: 220px;
+            }
+
+            .splash__image::after {
+                background: linear-gradient(
+                    to bottom,
+                    rgba(7, 13, 26, 0) 30%,
+                    rgba(7, 13, 26, 0.95) 100%
+                );
+            }
+
+            .splash__panel { flex: 1; padding: 2rem 1.75rem; min-width: unset; }
+            .splash__logo  { font-size: 2.5rem; }
+        }
+    </style>
 </head>
 <body>
-    <div class="card">
-        <h1 class="page-title">침연시</h1>
-        <p class="page-subtitle">당신의 선택이 결말을 바꿉니다</p>
+    <audio id="bgm" src="sound/opening.mp3" preload="auto"></audio>
 
-        <div id="alert" class="alert alert-error hidden"></div>
+    <div class="splash" id="splash">
+        <!-- 캐릭터 사진 -->
+        <div class="splash__image" id="splashImage">
+            <img src="images/index_1.jpg" alt="침착맨">
+            <div class="splash__image-badge">침착맨 연애 시뮬레이션</div>
+        </div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label class="form-label">이메일</label>
-                <input type="email" id="email" class="form-input" placeholder="example@email.com" required>
-            </div>
-            <div class="form-group">
-                <label class="form-label">비밀번호</label>
-                <input type="password" id="password" class="form-input" placeholder="비밀번호 입력" required>
-            </div>
-            <button type="submit" class="btn btn-primary mt-4">로그인</button>
-        </form>
+        <!-- 로그인 패널 -->
+        <div class="splash__panel">
+            <p class="splash__genre">Romance Simulation</p>
+            <h1 class="splash__logo">침연시</h1>
+            <p class="splash__tagline">당신의 선택이 결말을 바꿉니다</p>
 
-        <hr class="divider">
+            <div id="alert" class="alert alert-error hidden"></div>
 
-        <p class="text-center text-muted">
-            계정이 없으신가요?
-            <a href="register.html" class="link">회원가입</a>
-        </p>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">이메일</label>
+                    <input type="email" id="email" class="form-input"
+                           placeholder="example@email.com" required autocomplete="email">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">비밀번호</label>
+                    <input type="password" id="password" class="form-input"
+                           placeholder="비밀번호 입력" required autocomplete="current-password">
+                </div>
+                <button type="submit" class="btn-start mt-4">게임 시작</button>
+            </form>
+
+            <hr class="splash__divider">
+
+            <p class="splash__footer">
+                계정이 없으신가요? <a href="register.html">회원가입</a>
+            </p>
+        </div>
     </div>
+
+    <button id="muteBtn" title="음악 켜기/끄기">🔊</button>
 
     <script src="js/api.js"></script>
     <script src="js/auth.js"></script>
     <script>
         if (Auth.isLoggedIn()) location.href = 'menu.html';
 
+        // ── BGM & 드럼 이펙트 ──
+        const bgm       = document.getElementById('bgm');
+        const splash    = document.getElementById('splash');
+        const splashImg = document.getElementById('splashImage');
+        const muteBtn   = document.getElementById('muteBtn');
+        let drumFired   = false;
+
+        function triggerDrumEffect() {
+            splash.classList.add('is-shaking');
+            splashImg.classList.add('is-zooming');
+            setTimeout(() => splash.classList.remove('is-shaking'), 1200);
+        }
+
+        function startBgm() {
+            return bgm.play().then(() => {
+                if (!drumFired) {
+                    drumFired = true;
+                    setTimeout(triggerDrumEffect, 2500); // 드럼 쨍 타이밍
+                }
+            });
+        }
+
+        // 자동 재생 시도 → 차단 시 첫 인터랙션에서 재생
+        startBgm().catch(() => {
+            const unlock = () => {
+                startBgm().catch(() => {});
+            };
+            document.addEventListener('click',   unlock, { once: true });
+            document.addEventListener('keydown', unlock, { once: true });
+        });
+
+        // 뮤트 토글
+        muteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            bgm.muted = !bgm.muted;
+            muteBtn.textContent = bgm.muted ? '🔇' : '🔊';
+        });
+
+        // ── 로그인 ──
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const alertEl = document.getElementById('alert');
@@ -52,7 +336,7 @@
                 Auth.save(data.user_id, data.nickname);
                 location.href = 'menu.html';
             } catch (err) {
-                alertEl.textContent = err.message;
+                alertEl.textContent = '아이디 또는 비밀번호가 틀렸습니다.';
                 alertEl.classList.remove('hidden');
             }
         });
