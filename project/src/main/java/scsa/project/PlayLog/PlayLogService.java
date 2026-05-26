@@ -85,7 +85,9 @@ public class PlayLogService {
             nextScenarioResponse = new NextScenarioResponse(
                     nextScenario.getScenarioId(),
                     nextScenario.getContent(),
-                    scenarioTypeStr
+                    scenarioTypeStr,
+                    nextScenario.getOptAText(),
+                    nextScenario.getOptBText()
             );
         } else {
             // Case 2: 다음 ID가 NULL인 경우 (끝)
