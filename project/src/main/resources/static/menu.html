@@ -8,82 +8,178 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="card">
-        <h1 class="page-title">침연시</h1>
-        <p id="greeting" class="page-subtitle"></p>
+<div class="card">
+    <h1 class="page-title">침연시</h1>
+    <p id="greeting" class="page-subtitle"></p>
 
-        <div id="continueSection" class="hidden">
-            <div style="background:#0f172a; border:1px solid #334155; border-radius:0.75rem; padding:1rem; margin-bottom:1.5rem;">
-                <p class="text-sm text-muted" style="margin-bottom:0.25rem;">진행 중인 게임</p>
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-                    <span id="stepInfo" style="font-weight:600; color:#f1f5f9;"></span>
-                    <span id="scoreInfo" class="badge badge-indigo"></span>
-                </div>
-                <div class="progress-bar">
-                    <div id="progressFill" class="progress-fill" style="width:0%"></div>
-                </div>
+    <div id="alert" class="alert alert-error hidden"></div>
+
+    <!-- 진행 중인 게임 섹션 -->
+    <div id="continueSection" class="hidden">
+        <div style="background:#0f172a; border:1px solid #334155; border-radius:0.75rem;
+                        padding:1rem; margin-bottom:1.5rem;">
+            <p class="text-sm text-muted" style="margin-bottom:0.25rem;">진행 중인 게임</p>
+            <div style="display:flex; justify-content:space-between; align-items:center;
+                            margin-bottom:0.5rem;">
+                <span id="stepInfo" style="font-weight:600; color:#f1f5f9;"></span>
+                <span id="scoreInfo" class="badge badge-indigo"></span>
             </div>
-            <button id="continueBtn" class="btn btn-primary" style="margin-bottom:0.75rem;">이어하기</button>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width:0%"></div>
+            </div>
         </div>
-
-        <button id="newGameBtn" class="btn btn-secondary" style="margin-bottom:0.75rem;">새 게임 시작</button>
-        <button id="summaryBtn" class="btn btn-secondary hidden" style="margin-bottom:0.75rem;">결과 보기</button>
-
-        <hr class="divider">
-
-        <button id="logoutBtn" class="btn" style="background:transparent; color:#64748b; border:1px solid #334155;">
-            로그아웃
+        <button id="continueBtn" class="btn btn-primary" style="margin-bottom:0.75rem;">
+            ▶ 이어하기
         </button>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/auth.js"></script>
-    <script>
-        if (!Auth.requireLogin()) throw new Error('not logged in');
+    <!-- 게임 없음 메시지 -->
+    <p id="noGameMsg" class="text-muted text-sm hidden" style="margin-bottom:1rem;">
+        진행 중인 게임이 없습니다.
+    </p>
 
-        const userId = Auth.getUserId();
-        document.getElementById('greeting').textContent = `${Auth.getNickname()}님, 안녕하세요!`;
+    <!-- 게임 완료 후 결과 보기 -->
+    <button id="summaryBtn" class="btn btn-secondary hidden" style="margin-bottom:0.75rem;">
+        📊 결과 보기
+    </button>
 
-        (async () => {
-            try {
-                const state = await api.getPlayState(userId);
-                if (state.exists) {
-                    document.getElementById('continueSection').classList.remove('hidden');
-                    document.getElementById('stepInfo').textContent =
-                        `${state.current_step} / ${state.total_steps} 단계`;
-                    document.getElementById('scoreInfo').textContent = `${state.total_score}점`;
-                    const pct = Math.round((state.current_step - 1) / state.total_steps * 100);
-                    document.getElementById('progressFill').style.width = pct + '%';
+    <button id="newGameBtn" class="btn btn-secondary" style="margin-bottom:0.75rem;">
+        ✨ 새 게임 시작
+    </button>
 
-                    if (state.current_step > state.total_steps) {
-                        document.getElementById('summaryBtn').classList.remove('hidden');
-                    }
-                }
-            } catch {}
-        })();
+    <hr class="divider">
 
-        document.getElementById('continueBtn').addEventListener('click', () => {
-            location.href = 'game.html';
-        });
+    <button id="logoutBtn" class="btn"
+            style="background:transparent; color:#64748b; border:1px solid #334155;">
+        로그아웃
+    </button>
+</div>
 
-        document.getElementById('newGameBtn').addEventListener('click', async () => {
-            if (!confirm('새 게임을 시작하면 기존 진행 상황이 초기화됩니다. 계속하시겠습니까?')) return;
-            try {
-                await api.createOrResetPlayState(userId);
-                location.href = 'game.html';
-            } catch (err) {
-                alert(err.message);
+<!-- 새 게임 확인 모달 -->
+<div id="modalOverlay"
+     style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65);
+            align-items:center; justify-content:center; z-index:50;">
+    <div style="background:#1e293b; border:1px solid #334155; border-radius:1rem;
+                    padding:2rem; width:100%; max-width:340px; text-align:center;">
+        <p style="font-size:1.1rem; font-weight:700; color:#f1f5f9; margin-bottom:0.5rem;">
+            기존 기록이 초기화됩니다
+        </p>
+        <p class="text-muted text-sm" style="margin-bottom:1.5rem;">
+            진행 중인 게임을 지우고 새로 시작할까요?
+        </p>
+        <div style="display:flex; gap:0.75rem;">
+            <button id="modalCancel" class="btn btn-secondary">취소</button>
+            <button id="modalConfirm" class="btn btn-danger">새로 시작</button>
+        </div>
+    </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+    if (!Auth.requireLogin()) throw new Error('not logged in');
+
+    const userId = Auth.getUserId();
+    document.getElementById('greeting').textContent =
+        `${Auth.getNickname()}님, 안녕하세요!`;
+
+    let hasActiveGame = false;
+
+    (async () => {
+        try {
+            const state = await api.getPlayState(userId);
+
+            if (!state.exists) {
+                // 플레이 기록 자체가 없음
+                return;
             }
-        });
 
-        document.getElementById('summaryBtn').addEventListener('click', () => {
-            location.href = 'result.html';
-        });
+            // getEnding으로 게임 끝났는지 확인
+            // 정상 응답 오면 끝난 것, 400이면 아직 진행 중
+            let isFinished = false;
+            try {
+                await api.getEnding(userId);
+                isFinished = true;
+            } catch (e) {
+                isFinished = false;
+            }
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            Auth.clear();
-            location.href = 'index.html';
-        });
-    </script>
+            if (!isFinished) {
+                // 진행 중인 게임 있음
+                hasActiveGame = true;
+                document.getElementById('continueSection').classList.remove('hidden');
+                document.getElementById('stepInfo').textContent =
+                    `${state.current_step} / 4 단계`;
+                document.getElementById('scoreInfo').textContent =
+                    `${state.total_score}점`;
+                const pct = Math.round((state.current_step - 1) / 4 * 100);
+                document.getElementById('progressFill').style.width = pct + '%';
+                document.getElementById('newGameBtn').textContent = '🔄 새 게임 시작';
+            } else {
+                // 게임 끝남 → 진행중인 게임 없음 표시
+                document.getElementById('noGameMsg').classList.remove('hidden');
+                document.getElementById('summaryBtn').classList.remove('hidden');
+            }
+
+        } catch (err) {
+            showAlert('플레이 정보를 불러오지 못했습니다: ' + err.message);
+        }
+    })();
+
+    // 이어하기
+    document.getElementById('continueBtn').addEventListener('click', () => {
+        location.href = 'game.html';
+    });
+
+    // 결과 보기
+    document.getElementById('summaryBtn').addEventListener('click', () => {
+        location.href = 'result.html';
+    });
+
+    // 새 게임 시작
+    document.getElementById('newGameBtn').addEventListener('click', () => {
+        hasActiveGame ? openModal() : startNewGame();
+    });
+
+    async function startNewGame() {
+        closeModal();
+        try {
+            await api.createOrResetPlayState(userId);
+            location.href = 'game.html';
+        } catch (err) {
+            showAlert('게임을 시작하지 못했습니다: ' + err.message);
+        }
+    }
+
+    // 로그아웃
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+        Auth.clear();
+        location.href = 'index.html';
+    });
+
+    function openModal()  { document.getElementById('modalOverlay').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+    // 취소 → 이어하기로
+    document.getElementById('modalCancel').addEventListener('click', () => {
+        closeModal();
+        location.href = 'game.html';
+    });
+    document.getElementById('modalConfirm').addEventListener('click', startNewGame);
+
+    // 오버레이 바깥 클릭 → 이어하기로
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('modalOverlay')) {
+            closeModal();
+            location.href = 'game.html';
+        }
+    });
+
+    function showAlert(msg) {
+        const el = document.getElementById('alert');
+        el.textContent = msg;
+        el.classList.remove('hidden');
+    }
+</script>
 </body>
 </html>

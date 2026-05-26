@@ -23,13 +23,14 @@ async function apiPost(endpoint, data) {
 }
 
 const api = {
-    register:              (data)           => apiPost('/users/register', data),
-    login:                 (data)           => apiPost('/users/login', data),
-    checkEmail:            (email)          => apiGet(`/users/check-email?email=${encodeURIComponent(email)}`),
-    getPlayState:          (userId)         => apiGet(`/play-states/users/${userId}`),
-    createOrResetPlayState:(userId)         => apiPost(`/play-states/users/${userId}`),
-    getCurrentScenario:    (userId)         => apiGet(`/scenarios/current/users/${userId}`),
-    submitOption:          (userId, data)   => apiPost(`/play-logs/users/${userId}`, data),
-    getEnding:             (userId)         => apiGet(`/api/play-states/users/${userId}/ending`),
-    getSummary:            (userId)         => apiGet(`/api/play-states/users/${userId}/summary`),
+    register:               (data)         => apiPost('/users/register', data),
+    login:                  (data)         => apiPost('/users/login', data),
+    checkEmail:             (email)        => apiGet(`/users/check-email?email=${encodeURIComponent(email)}`),
+    getPlayState:           (userId)       => apiGet(`/play-states/users/${userId}`),
+    createOrResetPlayState: (userId)       => apiPost(`/play-states/users/${userId}`),
+    getCurrentScenario:     (userId)       => apiGet(`/scenarios/current/users/${userId}`),
+    submitOption:           (userId, data) => apiPost(`/play-logs/users/${userId}`, data),
+    // ✅ 버그 수정: /api 중복 제거
+    getEnding:              (userId)       => apiGet(`/play-states/users/${userId}/ending`),
+    getSummary:             (userId)       => apiGet(`/play-states/users/${userId}/summary`),
 };
